@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.arrcen.web.mapper.DataTreeMapper">
+
+    <sql id="DataElementColumns">
+        a.系统序号 as "systemId",
+        a.内部标识符 as "internalIdentifier",
+        a.数据元标识符 as "dataElementIdentifier",
+        a.数据元名称 as "dataElementName",
+        a.定义 as "definition",
+        a.数据类型 as "dataType",
+        a.表示格式 as "showFormat",
+        a.数据元允许值 as "allowedValue",
+        a.数据集名称 as "dataSetName",
+        a.子集名称 as "dataSetChildName",
+        a.版本 as "version",
+        a.备注 as "remarks"
+    </sql>
+
+    <resultMap id="dataElementResultMap" type="com.arrcen.web.pojo.DataElement">
+        <id property="systemId" column="系统序号" jdbcType="INTEGER"/>
+        <result property="internalIdentifier" column="内部标识符" jdbcType="VARCHAR"/>
+        <result property="dataElementIdentifier" column="数据元标识符" jdbcType="VARCHAR"/>
+        <result property="dataElementName" column="数据元名称" jdbcType="VARCHAR"/>
+        <result property="definition" column="定义" jdbcType="VARCHAR"/>
+        <result property="dataType" column="数据类型" jdbcType="VARCHAR"/>
+        <result property="showFormat" column="表示格式" jdbcType="VARCHAR"/>
+        <result property="allowedValue" column="数据元允许值" jdbcType="VARCHAR"/>
+        <result property="dataSetName" column="数据集名称" jdbcType="VARCHAR"/>
+        <result property="dataSetChildName" column="子集名称" jdbcType="VARCHAR"/>
+        <result property="version" column="版本" jdbcType="VARCHAR"/>
+        <result property="remarks" column="备注" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="HealthDataValueResultMap" type="com.arrcen.web.pojo.HealthDataValue">
+        <id property="systemId" column="系统序号" jdbcType="INTEGER"/>
+        <result property="oId" column="OID" jdbcType="VARCHAR"/>
+        <result property="rangeCode" column="值域代码" jdbcType="VARCHAR"/>
+        <result property="rangeName" column="值域名称" jdbcType="VARCHAR"/>
+        <result property="value" column="值" jdbcType="VARCHAR"/>
+        <result property="valueMeans" column="值含义" jdbcType="VARCHAR"/>
+        <result property="category" column="类别" jdbcType="VARCHAR"/>
+        <result property="childCategory" column="子类别" jdbcType="VARCHAR"/>
+        <result property="version" column="版本" jdbcType="VARCHAR"/>
+        <result property="remarks" column="备注" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+
+    <select id="getParents" resultType="String">
+        SELECT a.数据集名称 FROM "PUB_电子病历标准数据集" a GROUP BY a."数据集名称"
+    </select>
+
+    <select id="getSeconds" parameterType="String" resultType="String">
+        SELECT a.子集名称 FROM "PUB_电子病历标准数据集" a WHERE a."数据集名称" = #{dataSetName} GROUP BY a."子集名称"
+    </select>
+
+    <select id="getThirds" parameterType="String" resultType="String">
+        SELECT a.数据元名称 FROM "PUB_电子病历标准数据集" a WHERE a."子集名称" = #{dataChildSetName} GROUP BY a."数据元名称"
+    </select>
+
+    <select id="getElementInfo" parameterType="String" resultMap="dataElementResultMap">
+        SELECT * FROM "PUB_电子病历标准数据集" a WHERE a."数据元名称" = #{dataElementName} AND a."子集名称" =#{parentName}
+    </select>
+
+    <select id="getHealthDataValue" parameterType="String" resultMap="HealthDataValueResultMap">
+        SELECT
+	*
+FROM
+	(
+		SELECT
+			a ."数据元值域代码"
+		FROM
+			"PUB_卫生数据元目录" a
+		WHERE
+			a ."数据元标识符" = #{dataElementIdentifier}
+	) b
+LEFT JOIN "PUB_卫生数据元值域" c ON b."数据元值域代码" = c."值域代码"
+    </select>
+</mapper>

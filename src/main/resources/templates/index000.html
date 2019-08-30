@@ -1,0 +1,80 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+    <!--<meta charset="UTF-8">-->
+    <!--<title>Title</title>-->
+    <!--<script type="text/javascript" src="jquery-3.2.1.min.js"></script>-->
+    <!--<script type="text/javascript">-->
+        <!--$(function () {-->
+            <!--getAll();-->
+            <!--$("button").click(function(){-->
+                <!--var name = $("#name").val();-->
+                <!--var params = {"name":name};-->
+                <!--$.ajax({-->
+                    <!--url:'/element/save',-->
+                    <!--type:'put',-->
+                    <!--dataType:'json',-->
+                    <!--data:params,-->
+                    <!--success:function(resp){-->
+                        <!--if(resp===1){-->
+                            <!--console.log("success")-->
+                            <!--getAll();-->
+                        <!--}-->
+                    <!--}-->
+                <!--})-->
+            <!--});-->
+        <!--})-->
+
+        <!--function getAll(){-->
+            <!--$('table tr:not(:first)').empty();-->
+            <!--$.ajax({-->
+                <!--url:'element/getAll',-->
+                <!--type:'get',-->
+                <!--dataType:'json',-->
+                <!--success:function (resp) {-->
+                    <!--if(resp.code===1){-->
+                        <!--var elementCodeArr = resp.data;-->
+                        <!--var str = "";-->
+                        <!--for(var i=0;i<elementCodeArr.length;i++){-->
+                            <!--var ele = elementCodeArr[i];-->
+                            <!--console.log(ele.elementCodeId);-->
+                            <!--str+="<tr><td>"+ele.elementCodeId+"</td><br/><td>"+ele.elementName+"</td><br/>" +-->
+                                <!--"<td>"+ele.parentId+"</td></tr>";-->
+                        <!--}-->
+                        <!--$('table').append(str);-->
+                    <!--}-->
+                <!--}-->
+            <!--});-->
+        <!--}-->
+
+
+    <!--</script>-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<div>-->
+    <!--<div>-->
+        <!--元素名称：<input id="name" name="name">-->
+        <!--<button type="button">保存</button>-->
+    <!--</div>-->
+    <!--<table>-->
+        <!--<tr>-->
+            <!--<td>元素ID</td>-->
+            <!--<td>元素名称</td>-->
+            <!--<td>父元素ID</td>-->
+        <!--</tr>-->
+        <!--&lt;!&ndash;<tr th:each="element:${list}">-->
+            <!--<td th:text="${element.elementCodeId}"></td>-->
+            <!--<td th:text="${element.elementName}"></td>-->
+            <!--<td th:text="${element.parentId}"></td>-->
+        <!--</tr>&ndash;&gt;-->
+    <!--</table>-->
+<!--</div>-->
+
+<!--<div>-->
+    <!--<button><a href="/dataTree">数据集</a></button>-->
+<!--</div>-->
+<!--</body>-->
+
+
+<!--</html>-->

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据集</title>
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="jquery.ztree.all.js"></script>
+    <link rel="stylesheet" href="zTreeStyle.css" type="text/css">
+<script type="text/css">
+
+</script>
+
+</head>
+<body>
+
+<div>
+    <div style="float: left;width: 40%" >
+        <ul id="tree1" class="ztree"></ul>
+    </div>
+    <div style="float: left;width: 50%">
+
+        <form>
+            <table style="margin-bottom: 30px">
+                <tr>
+                    <td>系统序号</td>
+                    <td><span id="span1"></span></td>
+                </tr>
+                <tr>
+                    <td>内部标识符</td>
+                    <td><span id="span2"></span></td>
+                </tr>
+                <tr>
+                    <td>数据元标识符</td>
+                    <td><span id="span3"></span></td>
+                </tr>
+                <tr>
+                    <td>数据元名称</td>
+                    <td><span id="span4"></span></td>
+                </tr>
+                <tr>
+                    <td>定义</td>
+                    <td><span id="span5"></span></td>
+                </tr>
+                <tr>
+                    <td>数据类型</td>
+                    <td><span id="span6"></span></td>
+                </tr>
+                <tr>
+                    <td>表示格式</td>
+                    <td><span id="span7"></span></td>
+                </tr>
+                <tr>
+                    <td>数据元允许值</td>
+                    <td><span id="span8"></span></td>
+                </tr>
+                <tr>
+                    <td>数据集名称</td>
+                    <td><span id="span9"></span></td>
+                </tr>
+                <tr>
+                    <td>子集名称</td>
+                    <td><span id="span10"></span></td>
+                </tr>
+                <tr>
+                    <td>版本</td>
+                    <td><span id="span11"></span></td>
+                </tr>
+                <tr>
+                    <td>备注</td>
+                    <td><span id="span12"></span></td>
+                </tr>
+            </table>
+            <table id="table1">
+                <tr>
+                    <td>系统序号</td>
+                    <td><span id="sp1"></span></td>
+                </tr>
+                <tr>
+                    <td>OID</td>
+                    <td><span id="sp2"></span></td>
+                </tr>
+                <tr>
+                    <td>值域代码</td>
+                    <td><span id="sp3"></span></td>
+                </tr>
+                <tr>
+                    <td>值域名称</td>
+                    <td><span id="sp4"></span></td>
+                </tr>
+                <tr>
+                    <td>类别</td>
+                    <td><span id="sp5"></span></td>
+                </tr>
+                <tr>
+                    <td>子类别</td>
+                    <td><span id="sp6"></span></td>
+                </tr>
+                <tr>
+                    <td>版本</td>
+                    <td><span id="sp7"></span></td>
+                </tr>
+                <tr><td>
+                    <table id="table2">
+                        <tr>
+                            <td>值</td>
+                            <td>值含义</td>
+                            <td>备注</td>
+                        </tr>
+                    </table>
+                </td></tr>
+            </table>
+        </form>
+
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        var ztreeNodes;
+
+        $.ajax({
+            url:'/dataTree/getAll',
+            type:'get',
+            dataType:'json',
+            success:function (resp) {
+                if(resp.code===1){
+                    ztreeNodes = resp.data;
+                    console.log(ztreeNodes.length)
+                    var zTreeObj;
+                    // zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
+                    var setting = {
+                        view: {
+                            showIcon: false
+                        },
+                        data: {
+                            simpleData: {
+                                enable: true
+                            }
+                        },
+                        callback:{
+                            onClick:zTreeOnClick
+
+                        }
+                    };
+
+                    // zTree 的数据属性，深入使用请参考 API 文档（zTreeNode 节点数据详解）
+                    // var zNodes = [
+                    //     {name:"天津市", open:true, children:[{name:"南开区", open:true, children:[{name:"南开大学", open:true, children:[{name:"12号楼",open:true,children:[{name:"A104教室"}, {name:"A105教室"}, {name:"A106教室"}, {name:"A107教室"}, {name:"A108教室"}, {name:"A109教室"}, {name:"A1010教室111111111111111111111111"}, {name:"A1011教室"}, {name:"A1012教室"}]},{name:"13号楼"},]}, {name:"天津大学"}]}]},{name:"北京市", open:true, children:[{name:"朝阳区"}, {name:"海淀区"} ,{name:"海淀区"} ,{name:"海淀区"} ,{name:"海淀区"} ,{name:"海淀区"}]}];
+                    var zNodes = ztreeNodes;
+                    $(document).ready(function(){
+                        zTreeObj = $.fn.zTree.init($("#tree1"), setting, zNodes);
+                    });//加载Z-Tree，根据ID寻找
+
+
+                    function zTreeOnClick(event,treeId,treeNode) {
+
+                        $('#table2 tr:not(:first)').empty();
+
+                        var parentNode = treeNode.getParentNode();
+
+                        $.ajax({
+                            url:'/dataTree/dataElementInfo',
+                            type:'post',
+                            data:{dataElementName:treeNode.name,parentName:parentNode.name},
+                            dataType:'json',
+                            success:function (resp) {
+                                if(resp.code===1){
+                                    var allData = resp.data.elementInfo;
+                                    $("#span1").html(allData.systemId);
+                                    $("#span2").html(allData.internalIdentifier);
+                                    $("#span3").html(allData.dataElementIdentifier);
+                                    $("#span4").html(allData.dataElementName);
+                                    $("#span5").html(allData.definition);
+                                    $("#span6").html(allData.dataType);
+                                    $("#span7").html(allData.showFormat);
+                                    $("#span8").html(allData.allowedValue);
+                                    $("#span9").html(allData.dataSetName);
+                                    $("#span10").html(allData.dataSetChildName);
+                                    $("#span11").html(allData.version);
+                                    $("#span12").html(allData.remarks);
+                                    var dataValue = resp.data.healthDataValueList;
+                                    $("#sp1").html(dataValue.systemId);
+                                    $("#sp2").html(dataValue.oid);
+                                    $("#sp3").html(dataValue.rangeCode);
+                                    $("#sp4").html(dataValue.rangeName);
+                                    $("#sp5").html(dataValue.category);
+                                    $("#sp6").html(dataValue.childCategory);
+                                    $("#sp7").html(dataValue.version);
+                                    var valueArr = resp.data.valueList;
+                                    var str = "";
+                                    for(var i=0;i<valueArr.length;i++){
+                                        var value = valueArr[i];
+                                        str+="<tr><td>"+value.key+"</td><br/><td>"+value.value+"</td><br/>" +
+                                            "<td>"+value.remarks+"</td></tr>";
+                                    }
+                                    $("#table2").append(str);
+                                }
+                            }
+                        })
+                        // alert(treeNode.tId+":"+treeNode.name+":"+parentNode.name)
+                    }
+
+                }
+            }
+        })
+
+
+    })
+
+
+
+</script>
+</body>
+</html>

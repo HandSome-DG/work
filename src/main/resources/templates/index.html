@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cda</title>
+    <link rel="stylesheet" href="zTreeStyle.css" type="text/css">
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="jquery.ztree.excheck.js"></script>
+    <script type="text/javascript" src="jquery.ztree.exedit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+
+        var setting = {
+            view: {
+                showIcon: false,
+                selectedMulti: false
+            },
+            edit: {
+                enable: true,
+                showRemoveBtn: false,
+                showRenameBtn: false
+            },
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                beforeDrag: beforeDrag,
+                beforeRemove: beforeRemove,
+                beforeRename: beforeRename,
+                onRemove: onRemove,
+                onClick:onClick
+            }
+        };
+
+        var zTreeObj;
+        var respData;
+        var zNodes;
+        var log, className = "dark";
+        function beforeDrag(treeId, treeNodes) {
+            return false;
+        }
+        function beforeRemove(treeId, treeNode) {
+            className = (className === "dark" ? "":"dark");
+            showLog("[ "+getTime()+" beforeRemove ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name);
+            return confirm("确认删除 节点 -- " + treeNode.name + " 吗？");
+        }
+        function onRemove(e, treeId, treeNode) {
+            showLog("[ "+getTime()+" onRemove ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name);
+        }
+        function beforeRename(treeId, treeNode, newName) {
+            if (newName.length == 0) {
+                alert("节点名称不能为空.");
+                var zTree = $.fn.zTree.getZTreeObj("tree1");
+                setTimeout(function(){zTree.editName(treeNode)}, 10);
+                return false;
+            }
+            return true;
+        }
+        function showLog(str) {
+            if (!log) log = $("#log");
+            log.append("<li class='"+className+"'>"+str+"</li>");
+            if(log.children("li").length > 8) {
+                log.get(0).removeChild(log.children("li")[0]);
+            }
+        }
+        function getTime() {
+            var now= new Date(),
+                h=now.getHours(),
+                m=now.getMinutes(),
+                s=now.getSeconds(),
+                ms=now.getMilliseconds();
+            return (h+":"+m+":"+s+ " " +ms);
+        }
+
+        var newCount = 1;
+        function add(e) {
+            var zTree = $.fn.zTree.getZTreeObj("tree1"),
+                isParent = e.data.isParent,
+                nodes = zTree.getSelectedNodes(),
+                treeNode = nodes[0];
+            if (treeNode) {
+                treeNode = zTree.addNodes(treeNode, {id:(100 + newCount), pId:treeNode.id, isParent:isParent, name:"new node" + (newCount++)});
+            } else {
+                treeNode = zTree.addNodes(null, {id:(100 + newCount), pId:0, isParent:isParent, name:"new node" + (newCount++)});
+            }
+            if (treeNode) {
+                zTree.editName(treeNode[0]);
+            } else {
+                alert("叶子节点被锁定，无法增加子节点");
+            }
+        };
+        function edit() {
+            var zTree = $.fn.zTree.getZTreeObj("tree1"),
+                nodes = zTree.getSelectedNodes(),
+                treeNode = nodes[0];
+            if (nodes.length == 0) {
+                alert("请先选择一个节点");
+                return;
+            }
+            zTree.editName(treeNode);
+        };
+        function remove(e) {
+            var zTree = $.fn.zTree.getZTreeObj("tree1"),
+                nodes = zTree.getSelectedNodes(),
+                treeNode = nodes[0];
+            if (nodes.length == 0) {
+                alert("请先选择一个节点");
+                return;
+            }
+            var callbackFlag = $("#callbackTrigger").attr("checked");
+            zTree.removeNode(treeNode, callbackFlag);
+        };
+        function clearChildren(e) {
+            var zTree = $.fn.zTree.getZTreeObj("tree1"),
+                nodes = zTree.getSelectedNodes(),
+                treeNode = nodes[0];
+            if (nodes.length == 0 || !nodes[0].isParent) {
+                alert("请先选择一个父节点");
+                return;
+            }
+            zTree.removeChildNodes(treeNode);
+        };
+
+
+        function submitTree(){
+            allNodes=[];
+            var zTree = $.fn.zTree.getZTreeObj("tree1");
+            var pNodes = zTree.getNodes();
+            console.log(pNodes)
+            var data ={};
+            if(pNodes[0].children) {
+                data = getNodes(pNodes[0]);
+            }else{
+                data = pNodes[0];
+            }
+            console.log(data)
+            $.ajax({
+                url:'/info/put',
+                method:'put',
+                data:{'arrNodes':JSON.stringify(data)},
+                traditional: true,//这里设置为true
+                success:function (resp) {
+                    console.log(resp)
+                }
+            })
+        }
+        function getNodes(node){
+            var nodes = node.children;
+            var arr=[];
+            for(var i=0;i<nodes.length;i++){
+                var result={};
+                result.name = nodes[i].name
+                arr.push(result)
+                if(nodes[i].children) {
+                    result[nodes[i].name] = getNodes(nodes[i]);
+                }
+            }
+            return arr;
+
+        }
+        function onClick(treeId, treeNode){
+
+        }
+        $(document).ready(function(){
+            $.fn.zTree.init($("#tree1"), setting, zNodes);
+            $("#addParent").bind("click", {isParent:true}, add);
+            $("#addLeaf").bind("click", {isParent:false}, add);
+            $("#edit").bind("click", edit);
+            $("#remove").bind("click", remove);
+            $("#clearChildren").bind("click", clearChildren);
+            $("#submit").bind("click",submitTree);
+        });
+
+        $(function () {
+            // $.ajax({
+            //     url:'/info/get',
+            //     method:'get',
+            //     type:'json',
+            //     success:function (resp) {
+            //
+            //         console.log(resp)
+            //         respData = resp.data
+            //         zNodes=respData;
+            //
+            //         $(document).ready(function(){
+            //             zTreeObj = $.fn.zTree.init($("#tree1"), setting, zNodes);
+            //         });//加载Z-Tree，根据ID寻找
+            //
+            //
+            //     }
+            // })
+            $.ajax({
+                //请求方式为get
+                type: "GET",
+                //xml文件位置
+                url: "CXJ_4404_C0024.xml",
+                //返回数据格式为xml
+                dataType: "xml",
+                //请求成功完成后要执行的方法
+                error: function(xml){
+                    alert('加载XML文档出错');
+                },
+                success: function (xml) {
+                    //获取根节点的所有子节点
+                    var elements = xml.documentElement.children;
+                    //保存tree数据
+                    var json = "[";
+                    //获取所需的数据
+                    for (var i = 0; i < elements.length; i++) {
+                        //只取得lable=nearestNeighbourSearch的节点分支数据
+
+                            json = iterationNode(elements[i].children, true, 1, json);
+                            json = json.substr(0,json.length-1) + "]";
+                            console.log(json);
+
+
+                    }
+                    zNodes=json;
+                    $(document).ready(function(){
+                        zTreeObj = $.fn.zTree.init($("#tree1"), setting, zNodes);
+                    });//加载Z-Tree，根据ID寻找
+                }
+            })
+            /*
+             * 遍历迭代xml节点
+             * childNodes 子节点集合
+             * hasChildren 是否有子节点
+             * id 节点ID值
+             * json 存储节点字符串
+             */
+            function iterationNode(childNodes, hasChildren, id, json){
+                if(hasChildren){
+                    for( var i=0; childNodes!=null && i<childNodes.length; i++){
+                        var node = childNodes[i];
+                        json += "{id:\""+id+"_"+i+"\","
+                            + "pId:\""+id+"\","
+                            + "name:\""+node.getAttribute("titleName")+"\","
+                            + "open:0,"
+                            + "value:\""+node.getAttribute("label")+"\",";
+                        if(node.children!=null && node.children.length>0 ){
+                            json += "isParent:1},";
+                            json = iterationNode(node.children, true, id+"_"+i, json);
+                        }else{
+                            json += "isParent:0},";
+                        }
+                    }
+                }
+                return json;
+            }
+        })
+
+
+        //js中方法，微信扫描二维码
+        function WeiXin(){
+            //debugger;
+            //清空二维码文本框
+            $("#qrcode").html("");
+
+            var title = $("#commentTitle").val();
+            var url = window.location.href;
+            var url2 = url.split("localhost:8889/");
+            if (url2.length > 1){
+                var url3 = url2[1];
+                var url4 = "https://lol.qq.com/" + url3;
+            } else{
+                //如果是在线上路径下
+                url4=url2;
+            }
+            var icno = $("#icno").val();
+            if (icno == undefined || icno == null){
+                icno = "";
+            }
+
+            //主要看这里就行了（作用是调用后台接口以及图片回显）
+            $("#qrcode").attr("src", "/info/qrcode?content=" + "https://lol.qq.com/");     //根据路径访问后台接口，生成二维码并通过src属性展示在容器中，url4为我需要生成二维码的页面链接内容
+
+            $(".Index-Popup-Boxs").show();
+        }
+
+    </script>
+</head>
+<body>
+
+<div style="width: 50%;float: left">
+    <ul id="tree1" class="ztree"></ul>
+</div>
+
+<!--<div id="app">-->
+    <!--{{message}}-->
+<!--</div>-->
+
+<div style="width: 40%;height: 60%;float: right">
+    <form>
+        节点配置<label></label><br>
+        <br>
+        节点名称<input type="text" readonly>
+        属性代码<input type="text"><br>
+        <br>
+        节点文本<input type="text"  style="height: 30px">
+        属性值域<input type="text"  style="height: 30px">
+    </form>
+    <div>
+        <li style="list-style: none">
+            <!--&nbsp;&nbsp;&nbsp;&nbsp;[ <a id="addParent" href="#" title="增加父节点" onclick="return false;">增加父节点</a> ]-->
+            [ <a id="addLeaf" href="#" title="增加节点" onclick="return false;">增加节点</a> ]
+            &nbsp;&nbsp;&nbsp;&nbsp;[ <a id="edit" href="#" title="编辑名称" onclick="return false;">编辑名称</a> ]
+            &nbsp;&nbsp;&nbsp;&nbsp;[ <a id="remove" href="#" title="删除节点" onclick="return false;">删除节点</a> ]
+            &nbsp;&nbsp;&nbsp;&nbsp;[ <a id="clearChildren" href="#" title="清空子节点" onclick="return false;">清空子节点</a> ]<br/>
+        </li>
+        <li>
+            <img src="img/wx.png" style="width: 50px;height: 50px" alt="" onclick="WeiXin()">
+        </li>
+
+    </div>
+    <div>
+        [ <a id="submit" href="#" title="提交" onclick="return false;">提交树</a> ]
+    </div>
+    <div style="width: 100%;margin-top: 20px">
+        <form>
+            节点属性列表<lable/>
+            <br>
+            <br>
+            <table border="0px solid black" cellspacing="0" cellpadding="0">
+                <th>
+                <td style="padding-right: 4px">序号</td>
+                <td style="padding-right: 4px">属性代码</td>
+                <td style="padding-right: 4px">属性值域</td>
+                <td style="padding-right: 4px">值域对照</td>
+                <td style="padding-right: 4px">默认值域</td>
+                <td>属性描述</td>
+                </th>
+            </table>
+        </form>
+    </div>
+    <!-- 存放二维码的容器 -->
+    <img  id="qrcode" style="padding-left: 20px">
+</div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    var app = new Vue({
+        el:'#app',
+        data:function () {
+            return{
+                clinicalDocument:{
+                    realmCode:{
+                        code:""
+                    },
+                    typeId:{
+                        root:"",
+                        extension:""
+                    },
+                    templateId:{
+                        root:""
+                    },
+                    id:{
+                        root:"",
+                        extension:""
+                    },
+                    code:{
+                        displayName:"",
+                        codeSystemName:"",
+                        codeSystem:"",
+                        code:""
+                    },
+                    title:"",
+                    effectiveTime:{
+                        value:""
+                    },
+                    confidentialityCode:{
+                        displayName:"",
+                        codeSystemName:"",
+                        codeSystem:"",
+                        code:""
+                    },
+                    languageCode:{
+                        code:""
+                    },
+                    setId:{
+
+                    },
+                    versionNumber:{
+
+                    },
+                    recordTarget:{
+                        patientRole:{
+                            id:{
+                                root:"",
+                                extension:""
+                            },
+                            patient:{
+                                id:{
+                                    root:"",
+                                    extension:""
+                                },
+                                name:"",
+                                administrativeGenderCode:{
+
+                                },
+                                age:{
+                                    value:"",
+                                    unit:""
+                                },
+                                determinerCode:"",
+                                classCode:""
+
+                            },
+                            providerOrganization:{
+                                id:{
+                                    root:"",
+                                    extension:""
+                                },
+                                name:"",
+                                asOrganizationPartOf:{
+                                    wholeOrganization:{
+                                        id:{
+                                            root:"",
+                                            extension:""
+                                        },
+                                        name:"",
+                                        asOrganizationPartOf:{
+
+                                        },
+                                        determinerCode:"",
+                                        classCode:""
+                                    },
+                                    classCode:""
+                                },
+                                determinerCode:"",
+                                classCode:""
+                            }
+                        },
+                        typeCode:"",
+                        contextControlCode:""
+                    },
+                    author:{
+                        time:{
+                            value:""
+                        },
+                        assignedAuthor:{
+                            id:{
+                                root:"",
+                                extension:""
+                            },
+                            assignedPerson:{
+                                name:"",
+                                determinerCode:"",
+                                classCode:""
+                            },
+                            classCode:""
+
+                        },
+                        typeCode:"",
+                        contextControlCode:""
+                    },
+                    custodian:{
+                        assignedCustodian:{
+                            representedCustodianOrganization:{
+                                id:{
+                                    root:"",
+                                    extension:""
+                                },
+                                name:"",
+                                determinerCode:"",
+                                classCode:""
+                            },
+                            classCode:""
+                        },
+                        typeCode:""
+                    },
+                    authenticator:{
+                        time:{
+                            value:""
+                        },
+                        signatureCode:{
+
+                        },
+                        assignedEntity:{
+                            id:{
+                                root:"",
+                                extension:""
+                            },
+                            code:{
+                                displayName:"",
+                                codeSystemName:"",
+                                codeSystem:"",
+                                code:""
+                            },
+                            assignedPerson:{
+                                name:"",
+                                determinerCode:"",
+                                classCode:""
+                            },
+                            classCode:""
+                        }
+                    },
+                    relatedDocument:{
+                        parentDocument:{
+                            id:{
+                                root:"",
+                                extension:""
+                            },
+                            setId:{
+
+                            },
+                            versionNumber:{
+
+                            }
+                        },
+                        typeCode:""
+                    },
+                    component:{
+                        section:{
+                            code:{
+                                displayName:"",
+                                codeSystemName:"",
+                                codeSystem:"",
+                                code:""
+                            },
+                            text:{
+
+                            },
+                            entry:{
+                                observation:{
+                                    code:{
+                                        displayName:"",
+                                        codeSystemName:"",
+                                        codeSystem:"",
+                                        code:""
+                                    },
+                                    value:{
+                                        value:"",
+                                        displayName:"",
+                                        codeSystemName:"",
+                                        codeSystem:"",
+                                        code:""
+                                    },
+                                    entryRelationship:{
+                                        observation:{
+
+                                        },
+                                        typeCode:""
+                                    },
+                                    moodCode:"",
+                                    classCode:""
+                                }
+                            }
+
+                        },
+                        structureBody:{
+                            component:{
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+</script>
+
+</html>

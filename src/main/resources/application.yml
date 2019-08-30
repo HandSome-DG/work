@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@192.168.21.245:1521:orcl
+    username: AMBASE_HDR
+    password: AMBASE_HDR
+    type: com.alibaba.druid.pool.DruidDataSource
+#  datasource:
+#        url: jdbc:oracle:thin:@winxplonely:1521/orcl
+#        password: cda
+#        username: cda
+#        driver-class-name: oracle.jdbc.OracleDriver
+#        type: com.alibaba.druid.pool.DruidDataSource
+  thymeleaf:
+      prefix: classpath:/templates/
+      suffix: .html
+      encoding: UTF-8
+      cache: false
+mybatis:
+  mapper-locations: mybatis/mapper/*Mapper.xml
+  type-aliases-package: com.arrcen.web.pojo
+server:
+  port: 8889
+
+

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.arrcen.web.mapper.DataMapper" >
+    <sql id="DataColumns">
+        a.数据元标识符 as "id",
+        a.数据元名称 as "name",
+        a.定义 as "definition",
+        a.数据类型 as "type",
+        a.表示格式 as "format",
+        a.数据元允许值 as "beTrue",
+        a.数据元值域代码 as "dataValueCode",
+        a.版本 as "version",
+        a.备注 as "desc"
+    </sql>
+    
+    <resultMap id="dataColumns" type="com.arrcen.web.pojo.Data">
+        <id property="id" column="数据元标识符" jdbcType="VARCHAR"/>
+        <result property="name" column="数据元名称" jdbcType="VARCHAR"/>
+        <result property="definition" column="定义" jdbcType="VARCHAR"/>
+        <result property="type" column="数据类型" jdbcType="VARCHAR"/>
+        <result property="format" column="表示格式" jdbcType="VARCHAR"/>
+        <result property="beTrue" column="数据元允许值" jdbcType="VARCHAR"/>
+        <result property="dataValueCode" column="数据元值域代码" jdbcType="VARCHAR"/>
+        <result property="version" column="版本" jdbcType="VARCHAR"/>
+        <result property="desc" column="备注" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getData" resultType="Data" parameterType="string">
+        select
+        <include refid="DataColumns"/>
+        from PUB_卫生数据元目录 a
+        where a.数据元标识符=#{id}
+    </select>
+
+    <select id="getDataList" resultType="com.arrcen.web.pojo.Data" parameterType="Integer">
+        SELECT *
+        FROM(
+        select <include refid="DataColumns"/>,
+        ROWNUM rn FROM PUB_卫生数据元目录 a ORDER BY "数据元标识符") s
+        WHERE s.rn BETWEEN #{pre} AND #{suf}
+    </select>
+
+</mapper>
